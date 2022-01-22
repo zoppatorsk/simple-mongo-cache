@@ -2,18 +2,18 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 class SimpleMongoCache {
-	constructor({ ttl = 10, checkPeriod = 5, clearCollection = false, cacheCollection = "cache", ignoreMongoError = false, returnDbResults = false } = {}) {
-		this._validateOptions(ttl, checkPeriod, clearCollection, cacheCollection, ignoreMongoError, returnDbResults);
+	constructor({ ttl = 10, checkPeriod = 5, flushOnCreate = false, cacheCollectionName = "cache", ignoreMongoError = false, returnDbResults = false } = {}) {
+		this._validateOptions(ttl, checkPeriod, flushOnCreate, cacheCollectionName, ignoreMongoError, returnDbResults);
 		this.ttl = parseFloat(ttl);
 		this.checkPeriod = parseFloat(checkPeriod) * 1000; //parse n convert to miliseconds
 		this.ignoreMongoError = ignoreMongoError;
-		this.cacheCollection = cacheCollection;
+		this.cacheCollectionName = cacheCollectionName;
 		this.returnDbResults = returnDbResults;
 		this._lastExpireTime = null;
 		this._intervalCheck = null;
 		this._schema = new Schema({}, { strict: false }); //create an "everything goes" schema
-		this.DB = mongoose.model(this.cacheCollection, this._schema); //create model from schema
-		if (clearCollection) this.flush(); //if true clear the database collection when instance object
+		this.DB = mongoose.model(this.cacheCollectionName, this._schema); //create model from schema
+		if (flushOnCreate) this.flush(); //if true clear the database collection when instance object
 	}
 
 	async set(key, item) {
@@ -91,11 +91,11 @@ class SimpleMongoCache {
 		}
 	};
 
-	_validateOptions(ttl, checkPeriod, clearCollection, cacheCollection, ignoreMongoError, returnDbResults) {
+	_validateOptions(ttl, checkPeriod, flushOnCreate, cacheCollectionName, ignoreMongoError, returnDbResults) {
 		if (isNaN(parseFloat(ttl))) throw new Error("ttl needs to be a number");
 		if (isNaN(parseFloat(checkPeriod))) throw new Error("checkPeriod needs to be a number");
-		if (typeof clearCollection !== "boolean") throw new Error("clearCollection needs to be a boolean ie, true or false");
-		if (typeof cacheCollection !== "string") throw new Error("cacheCollection needs to be a string, ie the name of the collection to use");
+		if (typeof flushOnCreate !== "boolean") throw new Error("flushOnCreate needs to be a boolean ie, true or false");
+		if (typeof cacheCollectionName !== "string") throw new Error("cacheCollectionName needs to be a string, ie the name of the collection to use");
 		if (typeof ignoreMongoError !== "boolean") throw new Error("ignoreMongoError needs to be a boolean ie, true or false");
 		if (typeof returnDbResults !== "boolean") throw new Error("returnDbResults needs to be a boolean ie, true or false");
 	}
